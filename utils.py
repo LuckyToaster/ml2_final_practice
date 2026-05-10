@@ -1,6 +1,6 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_docling.loader import DoclingLoader
+from langchain_unstructured import UnstructuredLoader
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 
@@ -8,8 +8,12 @@ from contextlib import contextmanager
 from halo import Halo
 
 from pathlib import Path
-from os import walk
+from os import walk, cpu_count
 from os.path import join
+
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from math import ceil
+
 
 @contextmanager
 def spinner_task(text, spinner='dots'):
@@ -37,11 +41,32 @@ def get_filepaths(starting_dir: str, suffixes: list[str], dirs_to_ignore: list[s
 
 
 def get_documents(paths: list[str]) -> list[Document]:
+    pdf_paths = [p for p in paths if p.endswith('.pdf')]
+    paths = list(set(paths) - set(pdf_paths))
     docs = []
-    for p in paths:
-        if p.endswith('.pdf'): docs.extend(PyPDFLoader(p).load())
-        else: docs.extend(DoclingLoader(p).load())
+    if pdf_paths: 
+        for p in pdf_paths: docs.extend(PyPDFLoader(p).load())
+    if docs: 
+        docs.extend(UnstructuredLoader(paths).load())
     return docs
+    # pdf_to_doc = lambda path: PyPDFLoader(path).load()
+    # files_to_doc = lambda paths: UnstructuredLoader(paths).load()
+    #
+    # cpus = cpu_count() or 1
+    #
+    # with ProcessPoolExecutor(max_workers=cpus) as executor:
+    #     results = executor.map(pdf_to_doc, pdf_paths)
+    #     for doc_list in results: docs.extend(doc_list)
+    #
+    # # chunksize = int(ceil(len(paths) / cpus))
+    # # chunks = [paths[i:i+chunksize] for i in range(0, len(paths), chunksize)]
+    # chunks = [paths[i::cpus] for i in range(cpus)]
+    #
+    # with ProcessPoolExecutor(max_workers=cpus) as executor:
+    #     results = executor.map(files_to_doc, chunks)
+    #     for doc_list in results: docs.extend(doc_list)
+    #
+    # return docs
 
 
 def generate_embeddings(model, docs, db_dir, db_table, chunk_size, chunk_overlap): 
