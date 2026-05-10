@@ -49,24 +49,6 @@ def get_documents(paths: list[str]) -> list[Document]:
     if docs: 
         docs.extend(UnstructuredLoader(paths).load())
     return docs
-    # pdf_to_doc = lambda path: PyPDFLoader(path).load()
-    # files_to_doc = lambda paths: UnstructuredLoader(paths).load()
-    #
-    # cpus = cpu_count() or 1
-    #
-    # with ProcessPoolExecutor(max_workers=cpus) as executor:
-    #     results = executor.map(pdf_to_doc, pdf_paths)
-    #     for doc_list in results: docs.extend(doc_list)
-    #
-    # # chunksize = int(ceil(len(paths) / cpus))
-    # # chunks = [paths[i:i+chunksize] for i in range(0, len(paths), chunksize)]
-    # chunks = [paths[i::cpus] for i in range(cpus)]
-    #
-    # with ProcessPoolExecutor(max_workers=cpus) as executor:
-    #     results = executor.map(files_to_doc, chunks)
-    #     for doc_list in results: docs.extend(doc_list)
-    #
-    # return docs
 
 
 def generate_embeddings(model, docs, db_dir, db_table, chunk_size, chunk_overlap): 
