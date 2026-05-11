@@ -1,4 +1,4 @@
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from dotenv import load_dotenv
 from os import getenv
 from os.path import expanduser
@@ -20,10 +20,10 @@ if __name__ == '__main__':
     with spinner_task('Gathering all files'):
         starting_dir = expanduser('~')
         file_paths = get_filepaths(starting_dir, SUFFIXES, DIRNAMES_TO_IGNORE)
-        print(len(file_paths))
+        # print(len(file_paths))
 
     with spinner_task('Initializing embedding model'):
-        model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL, output_dimensionality=EMBEDDING_OUTPUT_DIMS)
+        model = OllamaEmbeddings(model=EMBEDDING_MODEL , dimensions=768)
 
     with spinner_task('Generating document objects from files'):
         docs = get_documents(file_paths)

@@ -11,9 +11,10 @@ from pathlib import Path
 from os import walk, cpu_count
 from os.path import join
 from time import sleep
-
+from logging import getLogger, ERROR
 from concurrent.futures import ProcessPoolExecutor
 
+getLogger("unstructured").setLevel(ERROR)
 
 @contextmanager
 def spinner_task(text, spinner='dots'):
@@ -45,30 +46,28 @@ def _paths_to_doc(paths: list[str]) -> list[Document]:
 
 
 def get_documents(paths: list[str]) -> list[Document]:
-    # pdf_paths = [p for p in paths if p.endswith('.pdf')]
-    # paths = [p for p in paths if not p.endswith('.pdf')]
-    # docs = []
-    # if pdf_paths: 
-    #     for p in pdf_paths: docs.extend(PyPDFLoader(p).load())
-    # if paths: 
-    #     docs.extend(UnstructuredLoader(paths).load())
     docs = []
     cpus = cpu_count() or 1
     chunks = [paths[i::cpus] for i in range(cpus) if paths[i::cpus]] 
 
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=cpus) as executor:
         results = executor.map(_paths_to_doc, chunks)
         for doc_list in results: docs.extend(doc_list) 
     return docs
-    # return UnstructuredLoader(paths).load()
 
 
 def generate_embeddings(model, docs, db_dir, db_table, chunk_size, chunk_overlap): 
     chunker = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, add_start_index=True)
     chunks = chunker.split_documents(docs)
     vector_store = Chroma(collection_name=db_table, persist_directory=db_dir, embedding_function=model)
-    chroma_max_chunks = 100 #5461 # the maximum number of chunks you can pass to chroma.add_documents()
-    for i in range(0, len(chunks), chroma_max_chunks):
-        batch = chunks[i:i+chroma_max_chunks]
-        vector_store.add_documents(batch)
-        sleep(0.1)
+
+    # for c in chunks:
+    #     vector_store.add_documents([c])
+    #     sleep(0.03) # 0.02 s per req
+
+    bs = 4000
+    for i in range(0, len(chunks), bs):
+        vector_store.add_documents(chunks[i:i+bs])
+        # sleep(0.2) 
+
+
