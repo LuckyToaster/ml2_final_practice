@@ -61,8 +61,8 @@ def get_documents(paths: list[str]) -> list[Document]:
 
 def get_vector_store(embedding_model):
     return Chroma(
-        collection_name=getenv('MODEL', ''), 
-        persist_directory=getenv('EMBEDDING_DB_DIR', ''),
+        collection_name=str(getenv('EMBEDDING_MODEL', '')).split(':')[0], 
+        persist_directory='vector_store',
         embedding_function=embedding_model
     )
 
@@ -73,18 +73,6 @@ def get_text_splitter():
         chunk_overlap=int(getenv('CHUNK_OVERLAP', 0)), 
         add_start_index=True
     )
-
-# def generate_embeddings(model, docs): 
-#     chunker = RecursiveCharacterTextSplitter(
-#         chunk_size=int(getenv('CHUNK_SIZE', 0)), 
-#         chunk_overlap=int(getenv('CHUNK_OVERLAP', 0)), 
-#         add_start_index=True
-#     )
-#     chunks = chunker.split_documents(docs)
-#     vector_store = get_vector_store(model)
-#     bs = 4000
-#     for i in range(0, len(chunks), bs):
-#         vector_store.add_documents(chunks[i:i+bs])
 
 
 def get_embedding_model():
