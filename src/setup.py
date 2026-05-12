@@ -1,32 +1,22 @@
-from langchain_ollama import OllamaEmbeddings
 from dotenv import load_dotenv
-from os import getenv
-from os.path import expanduser
-from utils import spinner_task, get_filepaths, get_documents, generate_embeddings
+from helpers import spinner_task, get_filepaths, get_documents, get_embedding_model, get_text_splitter, get_vector_store
 
 if __name__ == '__main__':
     load_dotenv()
-    EMBEDDING_MODEL = getenv('EMBEDDING_MODEL', '')
-    CHUNK_SIZE = int(getenv('CHUNK_SIZE', 0))
-    CHUNK_OVERLAP = int(getenv('CHUNK_OVERLAP', 0))
-    EMBEDDING_OUTPUT_DIMS = int(getenv('EMBEDDING_OUTPUT_DIMS', 0))
-    EMBEDDING_DB_DIR = getenv('EMBEDDING_DB_DIR', '')
-    EMBEDDING_DB_TABLE_NAME = getenv('EMBEDDING_DB_TABLE_NAME', '')
-    raw_suffixes = getenv('ALLOWED_FILETYPES', '')
-    raw_dirnames = getenv('DIRNAMES_TO_IGNORE', '')
-    SUFFIXES = [s.strip() for s in raw_suffixes.split(',') if s]
-    DIRNAMES_TO_IGNORE = [s.strip() for s in raw_dirnames.split(',') if s]
-    
+
     with spinner_task('Gathering all files'):
-        starting_dir = expanduser('~')
-        file_paths = get_filepaths(starting_dir, SUFFIXES, DIRNAMES_TO_IGNORE)
-        # print(len(file_paths))
+        file_paths = get_filepaths()
 
     with spinner_task('Initializing embedding model'):
-        model = OllamaEmbeddings(model=EMBEDDING_MODEL , dimensions=768)
+        model = get_embedding_model()
 
     with spinner_task('Generating document objects from files'):
         docs = get_documents(file_paths)
 
-    with spinner_task('Generating embeddings'):
-        generate_embeddings(model, docs, EMBEDDING_DB_DIR, EMBEDDING_DB_TABLE_NAME, CHUNK_SIZE, CHUNK_OVERLAP)
+    with spinner_task(f'Embedding {len(docs)} Documents'):
+        chunker = get_text_splitter()
+        chunks = chunker.split_documents(docs)
+        vector_store = get_vector_store(model)
+        bs = 4000
+        for i in range(0, len(chunks), bs):
+            vector_store.add_documents(chunks[i:i+bs])
