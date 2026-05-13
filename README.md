@@ -24,7 +24,8 @@ A tool calling agent can query this vector storage to find relevant information,
 ```bash
 git clone https://github.com/LuckyToaster/ml2_final_practice
 cd ml2_final_practice
-ollama pull embeddinggemma qwen3.5:4b
+ollama pull embeddinggemma 
+ollama pull qwen3.5:4b
 python -m venv .venv 
 source .venv/bin/activate
 pip install -r requirements.txt
