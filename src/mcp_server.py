@@ -1,46 +1,13 @@
 from fastmcp import FastMCP
 from dotenv import load_dotenv
-from helpers import get_vector_store, get_embedding_model
+from helpers import get_vector_store, get_embedding_model, _retrieve_context
 
-
-load_dotenv()
-vector_store = get_vector_store(get_embedding_model())
 mcp = FastMCP('RAG')
-
 
 @mcp.tool
 def retrieve_context(query: str) -> str:
     """Search codebase. Returns file paths and relevant code blocks."""
-    retrieved_docs = vector_store.similarity_search(query, k=8)
-    if not retrieved_docs: return "Error: No files matching that query were found."
-
-    files = {}
-    for doc in retrieved_docs:
-        path = doc.metadata.get('source', 'unknown_file')
-        if path not in files: files[path] = []
-        files[path].append(doc.page_content)
-
-    output = []
-    for path, chunks in files.items():
-        formatted_file = f"FILE_PATH: {path}\n"
-        formatted_file += "--- RELEVANT SNIPPETS ---\n"
-        formatted_file += "\n[...]\n".join(chunks)
-        formatted_file += "\n--- END OF FILE ---"
-        output.append(formatted_file)
-
-    return "\n\n================================\n\n".join(output)
-
-# @mcp.tool
-# def retrieve_context(query: str) -> str:
-#     """Retrieve information from the knowledge base to help answer a query."""
-#     retrieved_docs = vector_store.similarity_search(query, k=10)
-#     if not retrieved_docs: return "No relevant information found."
-#
-#     serialized = "\n\n".join(
-#         f"Source: {doc.metadata.get('source', 'unknown')}\nContent: {doc.page_content}"
-#         for doc in retrieved_docs
-#     )
-#     return serialized
+    return _retrieve_context(query, vector_store)
 
 @mcp.prompt()
 def rag_assistant(query: str):
@@ -63,4 +30,6 @@ def rag_assistant(query: str):
 
 
 if __name__ == '__main__':
+    load_dotenv()
+    vector_store = get_vector_store(get_embedding_model())
     mcp.run()

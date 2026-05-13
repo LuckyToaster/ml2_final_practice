@@ -4,8 +4,9 @@ from helpers import spinner_task, get_filepaths, get_documents, get_embedding_mo
 if __name__ == '__main__':
     load_dotenv()
 
-    with spinner_task('Gathering all files'):
+    with spinner_task('Gathering all files') as spinner:
         file_paths = get_filepaths()
+        spinner.succeed(f'Gathered {len(file_paths)} files') 
 
     with spinner_task('Initializing embedding model'):
         model = get_embedding_model()
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     with spinner_task('Generating document objects from files'):
         docs = get_documents(file_paths)
 
-    with spinner_task(f'Embedding {len(docs)} Documents'):
+    with spinner_task(f'Embedding {len(docs)} Documents (from {len(file_paths)} files)'):
         chunker = get_text_splitter()
         chunks = chunker.split_documents(docs)
         vector_store = get_vector_store(model)

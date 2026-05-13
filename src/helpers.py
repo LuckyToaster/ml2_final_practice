@@ -5,13 +5,10 @@ from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from halo import Halo
 from concurrent.futures import ProcessPoolExecutor
-from logging import getLogger, ERROR
 from contextlib import contextmanager
 from pathlib import Path
 from os import walk, cpu_count, getenv
 from os.path import join, expanduser
-
-getLogger("unstructured").setLevel(ERROR)
 
 @contextmanager
 def spinner_task(text, spinner='dots'):
@@ -84,4 +81,25 @@ def get_embedding_model():
 
 def get_llm():
     return ChatOllama(model=getenv('MODEL', ''))
+
+
+def _retrieve_context(query: str, vector_store: Chroma) -> str:
+    retrieved_docs = vector_store.similarity_search(query, k=8)
+    if not retrieved_docs: return "Error: No files matching that query were found."
+
+    files = {}
+    for doc in retrieved_docs:
+        path = doc.metadata.get('source', 'unknown_file')
+        if path not in files: files[path] = []
+        files[path].append(doc.page_content)
+
+    output = []
+    for path, chunks in files.items():
+        formatted_file = f"FILE_PATH: {path}\n"
+        formatted_file += "--- RELEVANT SNIPPETS ---\n"
+        formatted_file += "\n[...]\n".join(chunks)
+        formatted_file += "\n--- END OF FILE ---"
+        output.append(formatted_file)
+
+    return "\n\n================================\n\n".join(output)
 
