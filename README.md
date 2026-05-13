@@ -10,7 +10,7 @@ A tool calling agent can query this vector storage to find relevant information,
 ## Implementation 🧩
 - The RAG is built with the [Langchain](langchain.com) python module and exposed via an [MCP Server](https://modelcontextprotocol.io/docs/develop/build-server)
 - Both the LLM and embedding model are run locally using [Ollama](https://www.ollama.com/)
-- [Gemini CLI] () or  [OpenCode](https://opencode.ai/) can serve as the user interface, it is connected to the LLM (the brain) and the RAG MCP Server
+- [Gemini CLI](https://geminicli.com/) or  [OpenCode](https://opencode.ai/) can serve as the user interface, it is connected to the LLM (the brain) and the RAG MCP Server
 
 ## Requirements 📝
 - `Linux environment`
