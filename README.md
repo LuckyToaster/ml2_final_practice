@@ -111,7 +111,7 @@ Similarly for OpenCode, add the following to `~/.config/opencode/opencode.json`:
 The agents in these frontends will often try to use their own tools to answer your query, but you can ask them to "use the rag" to force them to use the RAG MCP
 When they do use the rag, the results arrive much faster and are of higher quality, so the project has been proven quite useful, especially because gemini-3-flash is often terrible at using its own tools and spends ages thinking and planning.
 
-[!Gemini example](gemini_example.png)
+![Gemini example](gemini_example.png)
 
 ## Clean up 🧹
 ```bash
