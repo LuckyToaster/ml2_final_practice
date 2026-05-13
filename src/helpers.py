@@ -9,6 +9,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from os import walk, cpu_count, getenv
 from os.path import join, expanduser
+import logging
+# Kill warnings from the specific library causing the spam
+logging.getLogger("unstructured").setLevel(logging.ERROR)
 
 @contextmanager
 def spinner_task(text, spinner='dots'):
